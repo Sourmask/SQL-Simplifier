@@ -5,7 +5,7 @@ from mysql.connector import Error
 # Connecting SQL to python
 try:
     print("\n--> Initiating SQL Connection <--\n")
-    password="84447060" #input("-- Enter Password :")
+    password=input("-- Enter Password :")
     SQLconnection=sql.connect(
         host='localhost', 
         user='root', 

@@ -1,13 +1,14 @@
 import mysql.connector as sql
 from tabulate import tabulate 
 from mysql.connector import Error
-
+import datetime
+start_time = datetime.datetime.now()
 # Connecting SQL to python
 try:
-    print("--> Initiating SQL Connection <--")
+    print("\n--> Initiating SQL Connection <--\n")
     host_name='localhost'
     user_name='root'
-    password=input("- Enter Password :")
+    password="84447060" #input("-- Enter Password :")
     SQLconnection=sql.connect(
         host=host_name, 
         user=user_name, 
@@ -15,7 +16,7 @@ try:
         )
     cr=SQLconnection.cursor()
     access=True
-    print("--> Connected Successfully <--")
+    print("\n--> Connected Successfully <--")
 except Error as err:
     access=False
     print(f"X-> An exception occurred, {err} <-X")
@@ -24,20 +25,21 @@ except Error as err:
 # Creating database (Main_Menu option 1)
 def createdatabase():
     dbname=input("New Database name: ")
-    print('--> Executing Query <--')
+    print('\n--> Executing Query <--')
     try:
         cr.execute(f"CREATE DATABASE {dbname}")
-        print('--> Query OK <--')
+        print('--> Query OK <--\n')
         database(dbname) # After database is created, it gets used automatically
     except Error as err:
         print(f"X-> An exception occurred, {err} <-X")
         main(access)
 
 # Using database (Main_Menu option 2)
-def database(dbname):
+def database(dbname,taskname="None"):
     try:
         cr.execute("USE "+dbname)
-        print(f"--> {dbname} IN USE <--")
+        print(f"\n--> {dbname} IN USE <--\n")
+        starter_table(dbname,header=f"{dbname} Database",taskname=taskname)
         dbmenu=[
             [1,"Create Table"],
             [2,"Add Data to table"],
@@ -45,7 +47,7 @@ def database(dbname):
             [4,"Run a query"],
             [5,"Exit"]
         ]
-        print(tabulate(dbmenu,tablefmt="simple_grid"))
+        print(tabulate(dbmenu,tablefmt="fancy_grid"))
         user=input("Enter task no: ")
         if user=="1":
             tbname=input("Enter new table name:")
@@ -59,6 +61,7 @@ def database(dbname):
             dataedit(dbname,tbname)
         elif user=="4":
             queryrunner()
+            database(dbname,taskname="None")
         else: 
             main(access)
     except Error as err:
@@ -76,21 +79,29 @@ def queryrunner():
             break
         try:
             cr.execute(query) 
-            try:
-                if "SELECT" in query.upper():
-                    output=cr.fetchall()
-                    print(tabulate(output,tablefmt="simple_grid"))
-                else:
-                    SQLconnection.commit()
-                    print('--> Query OK <--')
-            except:
-                pass
+            query=query.upper()
+            if "SELECT" in query or "DESCRIBE" in query or "DESC" in query or "SHOW" in query:
+                output=cr.fetchall()
+                # To extract the name of columns for headers
+                coltitle=[]
+                queryy=query.split("FROM ")
+                queryyy=queryy[1]
+                queryyyy=queryyy.split()
+                tbname=queryyyy[0]
+                cr.execute(f'DESCRIBE {tbname}')
+                for i in cr:
+                    for j in i:
+                        coltitle.append(j)
+                print(tabulate(output,coltitle,tablefmt="psql",stralign="center"))
+            else:
+                SQLconnection.commit()
+                print('--> Query OK <--')
         except Error as err:
             print(err)
-    main(access)
 
 # Creating Table
 def tablecreation(dbname,tbname,columncount):
+    starter_table(dbname,tbname,header=f"{dbname} Database",taskname="Creating a Table")
     for i in range(columncount):
         print("----------------------------")
         rowtitle=input("Enter Row Title: ")
@@ -114,25 +125,66 @@ def tablecreation(dbname,tbname,columncount):
     cr.execute(f"DESCRIBE {tbname}")
     output=cr.fetchall()
     header=["Field","Type","Null","Key","Default","Extra"]
-    print(tabulate(output,header,tablefmt="simple_grid"))
+    print(tabulate(output,header,tablefmt="fancy_grid"))
     database(dbname)
 
 # Adding Data to table
 def dataentry(dbname,tbname):
+    menu=[
+        [1,"Add Data Manually"],
+        [2,"Import CSV file"]
+    ]
+    starter_table(dbname,tbname,header=f'Data Editing',taskname="Data Entry")
+    print(tabulate(menu,tablefmt="fancy_grid"))
+    user=input("Enter task no: ")
     cr.execute(f"USE {dbname}")
-    datacount=int(input("Enter no. of data to input: "))
-    for i in range(datacount):
-        cr.execute(f"DESCRIBE {tbname}")
-        print(f"--> DATA ENTRY #{i+1} <--")
-        alldata=()
-        for j in cr:
-            data=input(f"{j[0]}: ")
-            alldata+=(data,)
-        cr.execute(f"INSERT INTO {tbname} VALUES {alldata}")
-        SQLconnection.commit()
-        print(f"Entered data: {alldata}")
-    print("SUCCESS")
+    if user=="1":
+        starter_table(dbname,tbname,header=f'{tbname} Table',taskname="Manual data")
+        datacount=int(input("Enter no. of data to input: "))
+        for i in range(datacount):
+            cr.execute(f"DESCRIBE {tbname}")
+            print(f"--> DATA ENTRY #{i+1} <--")
+            alldata=()
+            for j in cr:
+                data=input(f"{j[0]}: ")
+                alldata+=(data,)
+            cr.execute(f"INSERT INTO {tbname} VALUES {alldata}")
+            SQLconnection.commit()
+            print(f"Entered data: {alldata}")
+        print("SUCCESS")
+    if user=="2":
+        csvtosql(dbname,tbname)
     database(dbname)
+
+# imports data from CSV file
+def csvtosql(dbname,tbname):
+    import csv
+    filename=input("Enter file path: ")
+    file_name=''
+    # To avoid user misinput
+    for i in filename:
+        if i!='"':
+            file_name+=i
+    with open(file_name,"r") as f:
+        csvr=csv.reader(f,delimiter=',')
+        for i in csvr:
+            # To avoid possible variable type errors
+            for j in i:
+                indexx=i.index(j)
+                try:
+                    J=int(j)
+                    i[indexx]=J
+                except:
+                    continue
+            # To convert it into a tuple
+            data=()
+            for j in i:
+                data+=(j,)
+            cr.execute(f"USE {dbname}")
+            cr.execute(f"INSERT INTO {tbname} VALUES {data}")
+            SQLconnection.commit()
+            print(f"Entered data: {data}")
+        print("--> SUCCESS <--")
 
 # Edit Data in table
 def dataedit(dbname,tbname):
@@ -143,8 +195,9 @@ def dataedit(dbname,tbname):
         [4,"Run a query"],
         [5,"Exit"]
     ]
-    print(tabulate(menu,tablefmt="simple_grid"))
-    user=input("Enter task no : ")
+    starter_table(dbname,tbname,header=f'{tbname} Table',taskname="Data Editing")
+    print(tabulate(menu,tablefmt="fancy_grid"))
+    user=input("Enter task no: ")
     if user=="1":
         alter(dbname,tbname)
     if user=="2":
@@ -153,20 +206,26 @@ def dataedit(dbname,tbname):
         delete(dbname,tbname)
     if user=="4":
         queryrunner()
+        dataedit(dbname,tbname)
+    database(dbname)
 
 # Alter a table
 def alter(dbname,tbname):
     menu=[
-        [1,"Add Column"],
-        [2,"Drop Column"],
-        [3,"Rename Column"],
-        [4,"Modify Column"],
+        [1,"Add a Column"],
+        [2,"Drop a Column"],
+        [3,"Rename a Column"],
+        [4,"Modify a Coloumn Datatype"],
         [5,"Run a query"],
         [6,"Exit"]
     ]
-    print(tabulate(menu,tablefmt="simple_grid"))
-    user=int(input("Enter task no : "))
-    colname=input("Enter Column name:")
+    starter_table(dbname,tbname,header="Edit Database",taskname="Alter Table")
+    print(tabulate(menu,tablefmt="fancy_grid"))
+    user=int(input("Enter task no: "))
+    if user!=5 and user!=6:
+        tasknamee=findtask(menu,user)
+        starter_table(dbname,tbname,header=f"Alter {tbname} Table",taskname=tasknamee)
+        colname=input("Enter Column name:")
     if user==1:
         datatype=input("Enter datatype:")
         try:
@@ -200,6 +259,7 @@ def alter(dbname,tbname):
             print(f"X-> An exception occurred, {err} <-X")
     elif user==5:
         queryrunner()
+        alter(dbname,tbname)
     dataedit(dbname,tbname)
 
 # Update a table
@@ -218,30 +278,45 @@ def update(dbname,tbname):
 def delete(dbname,tbname):
     where=input("WHERE: ")
     try:
-        cr.execute(f"DELETE FROM TABLE {tbname} WHERE {where}")
+        cr.execute(f"DELETE FROM {tbname} WHERE {where}")
         SQLconnection.commit()
         print('--> Query OK <--')
     except Error as err:
         print(f"X-> An exception occurred, {err} <-X")    
     dataedit(dbname,tbname)
 
+# Starter Table
+def starter_table(dbname="None",tbname="None",header="_--_--_ SQL Simplifier _--_--_",taskname="None"):
+    list=[]
+    list.append([f'Selected Database  |  {dbname}'])
+    list.append([f'Selected Table     |  {tbname}'])
+    list.append([f'Selected Task      |  {taskname}'])
+    print(tabulate(list,[header],tablefmt="fancy_grid"))
+    print()
+
+# Task Finder
+def findtask(alltask,user):
+    for task in alltask:
+        taskno=str(task[0])
+        if taskno==user:
+            return task[1]
+
 # Main Menu
 def main(access):
-    if access==True:
+    if access==True: 
+        starter_table(header="Main Menu")
         menu=[
             [1,"Create Database"],
             [2,"Use Database"],
             [3,"Run a Query"],
-            [4,"Exit"]
-        ]
-        print(tabulate(menu,tablefmt="simple_grid"))
-
+            [4,"Exit"]]
+        print(tabulate(menu,tablefmt="fancy_grid"))
         user=input("Enter task no : ")
         if user=="1":
             createdatabase()
         if user=="2":
             dbname=input("Enter existing database name: ")
-            database(dbname)
+            database(dbname,findtask(menu,user))
         if user=="3":
             queryrunner()
 

@@ -1,17 +1,14 @@
 import mysql.connector as sql
 from tabulate import tabulate 
 from mysql.connector import Error
-import datetime
-start_time = datetime.datetime.now()
+
 # Connecting SQL to python
 try:
     print("\n--> Initiating SQL Connection <--\n")
-    host_name='localhost'
-    user_name='root'
     password="84447060" #input("-- Enter Password :")
     SQLconnection=sql.connect(
-        host=host_name, 
-        user=user_name, 
+        host='localhost', 
+        user='root', 
         passwd=password
         )
     cr=SQLconnection.cursor()
@@ -139,7 +136,7 @@ def dataentry(dbname,tbname):
     user=input("Enter task no: ")
     cr.execute(f"USE {dbname}")
     if user=="1":
-        starter_table(dbname,tbname,header=f'{tbname} Table',taskname="Manual data")
+        starter_table(dbname,tbname,header=f'{tbname} Table',taskname="Manual data addition")
         datacount=int(input("Enter no. of data to input: "))
         for i in range(datacount):
             cr.execute(f"DESCRIBE {tbname}")

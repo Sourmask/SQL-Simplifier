@@ -316,6 +316,7 @@ def main(access):
             database(dbname,findtask(menu,user))
         if user=="3":
             queryrunner()
+            main(access)
 
 
 main(access)

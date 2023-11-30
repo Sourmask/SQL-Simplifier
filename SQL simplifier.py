@@ -39,7 +39,6 @@ def database(dbname,taskname="None"):
     try:
         cr.execute("USE "+dbname)
         starter_table(dbname,header=f"{dbname} Database",taskname=taskname)
-        print(f"\n--> {dbname} IN USE <--\n")
         dbmenu=[
             [1,"Create Table"],
             [2,"Add Data to Table"],
@@ -74,12 +73,14 @@ def database(dbname,taskname="None"):
         if user=="5":
             queryrunner()
             database(dbname,taskname="None")
-        tbname=findtable(dbname)
         if user=="2":
+            tbname=findtable(dbname)
             dataentry(dbname,tbname)
         elif user=="3":
+            tbname=findtable(dbname)
             dataedit(dbname,tbname)
         elif user=="4":
+            tbname=findtable(dbname)
             display(dbname,tbname)
         else: 
             main(access)

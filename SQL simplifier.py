@@ -71,6 +71,9 @@ def database(dbname,taskname="None"):
                     break                    
             columncount=int(input("Enter no of columns:"))
             tablecreation(dbname,tbname,columncount)
+        if user=="5":
+            queryrunner()
+            database(dbname,taskname="None")
         tbname=findtable(dbname)
         if user=="2":
             dataentry(dbname,tbname)
@@ -78,9 +81,6 @@ def database(dbname,taskname="None"):
             dataedit(dbname,tbname)
         elif user=="4":
             display(dbname,tbname)
-        elif user=="5":
-            queryrunner()
-            database(dbname,taskname="None")
         else: 
             main(access)
     except Error as err:

@@ -392,7 +392,7 @@ def display(dbname,tbname):
             print(tabulate(output,coltitle,tablefmt="psql",stralign="center"))
         except Error as err:
             print(f"X-> An exception occurred, {err} <-X")
-    #database(dbname)
+    database(dbname)
 
 # Running a simple query (multiple calls)
 def queryrunner():

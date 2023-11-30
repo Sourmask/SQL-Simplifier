@@ -12,3 +12,7 @@ v1.0: 6 October 2023, 5:15:34 PM
 v2.0: 9 November 2023, 7:27:03 PM
     bug fixes: recurring functions fixed
     features added: better UI: A premenu table that gets displayed after every checkpoint to keep the user informed about which database, table and task is seletected at that checkpoint, an option to import a csv file of data and import it into a table on the  database.
+
+v3.0 30 November 2023, 2:23:55 PM
+    Multiple bug fixes
+    features added: table selection simplified, displaying tables, etc.

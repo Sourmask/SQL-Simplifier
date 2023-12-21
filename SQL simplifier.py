@@ -49,6 +49,7 @@ def database(dbname,taskname="None"):
         ]
         print(tabulate(dbmenu,tablefmt="fancy_grid"))
         user=input("Enter task no: ")
+        proceed=True
         if user=="/q":
             main(access)
         if user=="1":
